@@ -1,0 +1,36 @@
+.dashboard-top {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dashboard-sort {
+  margin-bottom: 1rem;
+}
+
+.card {
+  margin-bottom: 5px;
+}
+
+.card-content {
+  padding: 10px;
+}
+
+.edit-badge {
+  float: right;
+  &:hover {
+    background-color: darken(#007bff, 15%);
+    cursor:pointer;
+  }
+}
+
+.pagination {
+  margin-top: 1rem;
+}
+
+input[type=date] {
+  margin-bottom: 5px;
+}
+
+.save-btn {
+  margin-bottom: 10px;
+}
