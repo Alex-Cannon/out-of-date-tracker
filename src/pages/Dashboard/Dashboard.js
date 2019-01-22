@@ -21,7 +21,10 @@ export default class Dashboard extends Component {
           </ol>
         </nav>
         <SearchForm/>
-        {this.state.items?this.state.items.map((item, i) => <Item key={"item-"+i} id={"item-"+i}/>):""}
+        <div>
+          {this.state.items?this.state.items.map((item, i) => <Item key={"item-"+i} id={"item-"+i}/>):""}
+          <button className="btn btn-outline-primary float-right">Save All</button>
+        </div>
         <Pagination/>
       </div>
     );
