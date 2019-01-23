@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {Route, BrowserRouter as Router, Redirect} from 'react-router-dom';
+import axios from 'axios';
 import './App.scss';
 import './footer.scss';
 import Nav from '../Nav/Nav.js';
@@ -19,7 +20,8 @@ const ROUTES = [{
 }, {
   path: '/dashboard',
   component: require('../../pages/Dashboard/Dashboard.js').default,
-  exact: true
+  exact: true,
+  auth: true
 }];
 
 class App extends Component {
@@ -27,8 +29,19 @@ class App extends Component {
     super(props);
 
     this.state = {
-      user: {}
+      user: {},
+      ready: false
     }
+  }
+
+  componentWillMount() {
+    axios.get('/api/myuser')
+    .then((res) => {
+      this.setState({user: res.data, ready: true});
+    })
+    .catch(() => {
+      this.setState({ready: true});
+    })
   }
 
   setGlobal(obj, cb) {
@@ -39,17 +52,19 @@ class App extends Component {
     // Set each route
     return ROUTES.map(({path, component: C, exact, auth}) => {
 
-      /*
       // Handle Auth/Non-Auth routes
       const render = auth?(props) => {
         if (this.state.user._id) {
-          return <C {...props} setGlobal={this.setGlobal.bind(this)} globals={this.state}/>;
+          return (
+            <ContentWrapper>
+              <C {...props} setGlobal={this.setGlobal.bind(this)} globals={this.state}/>
+            </ContentWrapper>
+          );
         }
-        return <Redirect to={"/login?redirect=" + props.location.pathname}/>;  
+        return <Redirect to={"/signin"}/>;  
 
       // Non-Auth routes
-      }:*/
-      const render = (props) => {
+      }: (props) => {
         return (
           <ContentWrapper>
             <C {...props} setGlobal={this.setGlobal.bind(this)} globals={this.state}/>
@@ -78,10 +93,14 @@ class App extends Component {
   }
 
   render() {
+    if (!this.state.ready) {
+      return "Loading...";
+    }
+
     return (
       <Router>
         <PageWrapper>
-          <Nav/>
+          <Nav setGlobal={this.setGlobal.bind(this)} globals={this.state}/>
           {this.getRoutes()}
         </PageWrapper>
       </Router>

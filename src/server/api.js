@@ -13,12 +13,11 @@ const PORT = process.env.PORT || 80;
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-console.log("hit");
 // Connect to DB before opening routes
 mongoUtil.connectToServers((err) => {
   if (err) throw err;
 
-  console.log("DB connections success.");
+  console.log("DB connection success.");
 
   // Setup/Configure passport
   require('./utils/passportUtil.js').setupPassport(app);

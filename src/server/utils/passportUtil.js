@@ -46,7 +46,6 @@ let isAuth = function(req, res, next) {
     return next();
   } else {
     return res.sendStatus(401);
-    console.log("401 Login failed.");
   }
 }
 

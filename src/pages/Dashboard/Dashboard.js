@@ -29,6 +29,9 @@ export default class Dashboard extends Component {
   render() {
     return (
       <div>
+        <div className="breadcrumb">
+          <i>{this.props.globals.user?this.props.globals.user.username + "'s Dashboard":""}</i>
+        </div>
         <SearchForm items={this.state.items} set={this.set.bind(this)}/>
         <div className="row">
           <div className="col">
