@@ -28,7 +28,7 @@ export default class Signup extends Component {
             <input type="submit" className="btn btn-success"/>
           </div>
         </form>
-        <p>Already have an account? <Link to="/login">Login here</Link>.</p>
+        <p>Already have an account? <Link to="/signin">Sign In here</Link>.</p>
       </div>
     );
   }

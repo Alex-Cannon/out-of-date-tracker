@@ -12,25 +12,23 @@
 }
 
 .card-content {
-  padding: 10px;
-}
-
-.edit-badge {
-  float: right;
-  &:hover {
-    background-color: darken(#007bff, 15%);
-    cursor:pointer;
-  }
-}
-
-.pagination {
-  margin-top: 2rem;
-}
-
-input[type=date] {
-  margin-bottom: 5px;
+  padding: 15px;
 }
 
 .save-btn {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.save-all-btn {
+  display: block;
+  margin-top: 10px;
+}
+
+.expire-dates-list {
+  padding-bottom: 30px;
+}
+
+.pagination {
+  float: center;
+  margin-top: 1rem;
 }

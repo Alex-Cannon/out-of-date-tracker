@@ -11,8 +11,8 @@ export default class Home extends Component {
         </h1>
         <p>Easily keep track of out of date dairy or other product. Add, edit or remove product as necessary. :)</p>
         <div className="row justify-content-center">
-          <Link className="btn btn-success" to="/signup">Signup</Link>
-          <Link className="btn btn-primary" to="/login">Login</Link>
+          <Link className="btn btn-success" to="/signup">Sign Up</Link>
+          <Link className="btn btn-primary" to="/signin">Sign In</Link>
         </div>
       </div>
     );

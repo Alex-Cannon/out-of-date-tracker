@@ -13,7 +13,7 @@ const ROUTES = [{
   component: require('../../pages/Signup/Signup.js').default,
   exact: true
 }, {
-  path: '/login',
+  path: '/signin',
   component: require('../../pages/Login/Login.js').default,
   exact: true
 }, {
