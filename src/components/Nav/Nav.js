@@ -8,7 +8,6 @@ export default class Nav extends Component {
   signOut() {
     axios.get('/api/signout')
     .then(() => {
-      alert("Signing out...");
       this.props.setGlobal({user: {}});
     })
     .catch(() => {
@@ -26,12 +25,12 @@ export default class Nav extends Component {
         <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
           <div className="navbar-nav">
             <Link className="nav-item nav-link" to="/dashboard">Dashboard</Link>
+            <Link className="nav-item nav-link" to="/signup">Sign Up</Link>
             {this.props.globals && this.props.globals.user._id?(
               <Link className="nav-item nav-link" to="#" onClick={this.signOut.bind(this)}>Sign Out</Link>
             ):(
               <Link className="nav-item nav-link" to="/signin">Sign In</Link>
             )}
-            <Link className="nav-item nav-link" to="/signup">Sign Up</Link>
           </div>
         </div>
       </nav>

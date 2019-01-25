@@ -29,7 +29,7 @@ export default class Login extends Component {
       });
     })
     .catch((err) => {
-      this.setState({res: err.response.data});
+      this.setState({res: err.response});
     });
   }
 
@@ -39,7 +39,7 @@ export default class Login extends Component {
     }
     return (
       <div className="alert alert-danger" role="alert">
-        {this.state.res.message}
+        {this.state.res.statusText}
       </div>
     );
   }
@@ -49,18 +49,18 @@ export default class Login extends Component {
       <div>
         <h1>Sign In</h1>
         <br/>
-        
+        {this.resToJSX()}
         <form onSubmit={this.handleSubmit.bind(this)} method="POST">
           <label>Username</label>
           <div className="input-group mb-3">
             <div className="input-group-prepend">
               <span className="input-group-text" id="basic-addon1">@</span>
             </div>
-            <input type="text" className="form-control" placeholder="Username" name="username" value={this.state.data?this.state.data.username:""} onChange={this.handleChange.bind(this)}/>
+            <input type="text" className="form-control" placeholder="Username" name="username" value={this.state.data.username} onChange={this.handleChange.bind(this)}/>
           </div>
           <label>Password</label>
           <div className="input-group mb-3">
-            <input type="password" className="form-control" placeholder="Password" name="password" value={this.state.data?this.state.data.password:""} onChange={this.handleChange.bind(this)}/>
+            <input type="password" className="form-control" placeholder="Password" name="password" value={this.state.data.password} onChange={this.handleChange.bind(this)}/>
           </div>
           <div className="input-group mb-3">
             <input type="submit" className="btn btn-primary"/>

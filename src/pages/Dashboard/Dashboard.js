@@ -8,7 +8,8 @@ export default class Dashboard extends Component {
     super(props);
 
     this.state = {
-      items: []
+      items: [],
+      newItems: []
     }
   }
 
@@ -16,13 +17,31 @@ export default class Dashboard extends Component {
     this.setState(obj);
   }
 
-  componentDidMount() {
-    axios.get('/items?sortby=date&page=0')
+  search(query, skip) {
+    // Create search
+    let search = '';
+    search += query?"?query="+query:"";
+    search += skip?search.length > 0?"&skip="+skip:"?skip="+skip:"";
+
+    axios.get("/api/items" + search)
     .then((res) => {
-      console.log(res.data);
+      // Update URI
+      this.props.history.push('/dashboard' + search);
+      this.setState({items: res.data});
+    })
+    .catch(() => {
+    });
+  }
+
+  componentWillMount() {
+    let search = this.props.location.search;
+
+    axios.get('/api/items' + search)
+    .then((res) => {
+      this.setState({items: res.data});
     })
     .catch((err) => {
-      console.log(err);
+      alert("(" + err.response + ")Error Loading items...");
     });
   }
 
@@ -32,14 +51,14 @@ export default class Dashboard extends Component {
         <div className="breadcrumb">
           <i>{this.props.globals.user?this.props.globals.user.username + "'s Dashboard":""}</i>
         </div>
-        <SearchForm items={this.state.items} set={this.set.bind(this)}/>
+        <SearchForm newItems={this.state.newItems} set={this.set.bind(this)} search={this.search.bind(this)}/>
         <div className="row">
           <div className="col">
-            {this.state.items?this.state.items.map((itemData, i) => <Item data={itemData} key={"item-"+i} id={"item-"+i}/>):""}
-            <button className="btn btn-outline-primary btn-sm float-right save-all-btn">Save All</button>
+            <NewItems set={this.set.bind(this)} items={this.state.newItems}/>
+            {this.state.items?this.state.items.map((itemData, i) => <Item data={itemData} key={"item-"+i} id={"item" + i + itemData._id} index={i} items={this.state.items} set={this.set.bind(this)}/>):""}
           </div>
         </div>
-        <Pagination/>
+        <Pagination search={this.props.location.search} searchBy={this.search.bind(this)} items={this.state.items}/>
       </div>
     );
   }
@@ -48,58 +67,159 @@ export default class Dashboard extends Component {
 class SearchForm extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      query: ""
+    }
   }
 
   addItem(e) {
     e.preventDefault();
-    let items = this.props.items;
-    items.push({name: "New Item", class: "border-primary"});
-    this.props.set({items: items});
+    let items = this.props.newItems;
+    items.push({name: "New Item", dates: [""], class: "border-primary"});
+    this.props.set({newItems: items});
+  }
+
+  handleChange(e) {
+    this.setState({query: e.target.value});
+  }
+
+  handleSubmit(e) {
+    e.preventDefault();
+
+    this.props.search(this.state.query, 0);
   }
 
   render () {
     return (
       <div className="row">
-        <form className="col-sm-12">
+        <form className="col-sm-12" method="POST" onSubmit={this.handleSubmit.bind(this)}>
           <div className="input-group">
             <label>Search for an item</label>
             <div className="input-group mb-3">
-              <input type="text" className="form-control" placeholder="Enter keywords" aria-label="Enter keywords"/>
+              <input type="text" className="form-control" placeholder="Enter Search" value={this.state.query} onChange={this.handleChange.bind(this)}/>
               <div className="input-group-append">
-                <button className="btn btn-outline-primary" type="button" id="button-addon2">Search</button>
+                <button className="btn btn-outline-primary" type="submit" id="button-addon2">Search</button>
               </div>
             </div>
           </div>
-          <button className="btn btn-outline-primary btn-sm float-right" onClick={this.addItem.bind(this)}>Add Item</button>
-          <div className="dropdown float-right dashboard-sort">
-            <button className="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Sort By
-            </button>
-            <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <button className="dropdown-item">Out of Date</button>
-              <button className="dropdown-item">Needs Dates</button>
-            </div>
-          </div>
+          <button className="btn btn-outline-primary btn-sm float-right add-item-btn" onClick={this.addItem.bind(this)}>Add Item</button>
         </form>
       </div>
     );
   }
 }
 
+class NewItems extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  saveAll(e) {
+    let items = this.props.items;
+    items = items.map((item) => {
+
+      // Convert dates to unix
+      for(let i = item.dates.length; i--; i > -1) {
+        if (item.dates[i].length && item.dates[i].length > 0) {
+          item.dates[i] = new Date(item.dates[i]).getTime();  
+        } else {
+          item.dates.splice(i, 1);
+        }
+      }
+      
+      return item;
+    });
+
+    axios.post('/api/items', {items: this.props.items})
+    .then((res) => {
+    })
+    .catch((err) => {
+    });
+  }
+
+  render () {
+    if (!this.props.items || !this.props.items.length) {
+      return "";
+    }
+
+    return (
+      <div className="row">
+        <div className="col">
+          {this.props.items.map((itemData, i) => (
+            <Item key={"newitem-" + i} data={itemData} id={"item" + i + itemData._id} index={i} items={this.props.items} set={this.props.set.bind(this)} newItem={true}/>
+          ))}
+          <button className="btn btn-outline-primary btn-sm float-right save-all-btn" onClick={this.saveAll.bind(this)}>Save All</button>
+        </div>
+      </div>
+    );
+  }
+}
+
 class Item extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      outline: ""
+    }
+  }
+
+  getFirstToSpoil() {
+    if (!this.props.data.dates) {
+      return "Needs Date";
+    }
+
+    let dates = this.props.data.dates;
+    let greatest = 0;
+    for(let i = 0; i < dates.length; i++) {
+      if (dates[i] > greatest) {
+        greatest = dates[i];
+      }
+    }
+
+    if (greatest !== 0) {
+      return new Date(greatest).toISOString().substring(0, 10);
+    } else {
+      return "Needs Date";
+    }
+  }
+
+  setOutline(ood) {
+    if (ood !== "Needs Date") {
+      let now = new Date();
+      ood = new Date(ood);
+
+      if (ood.getTime() <= now.getTime()) {
+        this.setState({outline: " border-danger"});
+      } else if (ood.getTime() - now.getTime() <= 432000000 ) {
+        this.setState({outline: " border-warning"});
+      } else {
+        this.setState({outline: ""});
+      }
+    } else {
+      this.setState({outline: " border-secondary"});
+    }
+  }
+
+  componentWillMount() {
+    this.setOutline(this.getFirstToSpoil());
+  }
+
   render () {
     const data = this.props.data || {name: "Undefined"};
     return (
-      <div className={data.class?"card " + data.class:"card"}>
+      <div className={data.class?"card " + data.class + this.state.outline:"card" + this.state.outline}>
         <a className="card-header" data-toggle="collapse" href={"#"+this.props.id} role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
-          {data.name}
-          <i className="text-bold float-right">OOD 1/19/16</i>
+          {data.name || "No Name"}
+          <i className="text-bold float-right">OOD {this.getFirstToSpoil()}
+          </i>
         </a>
         <div className="row">
           <div className="col">
             <div className="collapse multi-collapse" id={this.props.id}>
               <div className="card-content">
-                <ItemEditForm data={this.props.data}/>
+                <ItemEditForm data={this.props.data} index={this.props.index} items={this.props.items} set={this.props.set.bind(this)} newItem={this.props.newItem}/>
               </div>
             </div>
           </div>
@@ -112,82 +232,157 @@ class Item extends Component {
 class ItemEditForm extends Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      name: this.props.data.name === "New Item"?"":this.props.data.name,
-      dates: this.props.data.dates || [""]
-    }
-  }
-
-  handleNameChange() {
-
-  }
-
-  handleDateChange(e, i) {
-    e.preventDefault();
-    let dates = this.state.dates;
-    dates[i] = e.target.value;
-    this.setState({dates});
   }
 
   addDate(e) {
     e.preventDefault();
-    let dates = this.state.dates;
+    let dates = this.props.data.dates;
     dates.push("");
-    this.setState({dates});
+    this.setItem('dates', dates);
+  }
+
+  setItem(key, value) {
+    let items = this.props.items;
+    items[this.props.index][key] = value;
+    if (this.props.newItem) {
+      this.props.set({newItems: items});
+    } else {
+      this.props.set({items});
+    }
   }
 
   removeDate(e, index) {
     e.preventDefault();
-    let dates = this.state.dates;
-    console.log("BEFORE: " + JSON.stringify(dates));
+    let dates = this.props.data.dates;
     dates.splice(index, 1);
-    console.log("AFTER: " + JSON.stringify(dates));
-    this.setState({dates});
+    this.setItem('dates', dates);
+  }
+
+  submitItem(e) {
+    e.preventDefault();
+    let item = this.props.data;
+
+    // Convert dates to unix
+    for(let i = item.dates.length; i--; i > -1) {
+      if (item.dates[i].length && item.dates[i].length > 0) {
+        item.dates[i] = new Date(item.dates[i]).getTime();  
+      } else {
+        item.dates.splice(i, 1);
+      }
+    }
+    
+    // POST item
+    axios.put('/api/item', item)
+    .then((res) => {
+      this.setItem('_id', res.data._id);
+    })
+    .catch((err) => {
+      alert("Failed to save item");
+    });
+  }
+
+  deleteItem(e) {
+    e.preventDefault();
+    if (!this.props.data._id) {
+      let items = this.props.items;
+      items.splice(this.props.index, 1);
+      if (this.props.newItem) {
+        this.props.set({newItems: items});
+      } else {
+        this.props.set({items});
+      }
+      return;
+    }
+
+    axios.delete('/api/item', {data: {item_id: this.props.data._id}})
+    .then(() => {
+      let items = this.props.items;
+      items.splice(this.props.index, 1);
+      this.props.set({items});
+    })
+    .catch(() => {
+      alert("Error deleting item");
+    })
+  }
+
+  handleNameChange(e) {
+    e.preventDefault();
+    this.setItem('name', e.target.value);
+  }
+
+  handleDateChange(e, i) {
+    e.preventDefault();
+    let dates = this.props.data.dates;
+    dates[i] = e.target.value;
+    this.setItem('dates', dates);
   }
 
   render () {
     return (
-      <form>
+      <form method="POST" onSubmit={this.submitItem.bind(this)}>
         <div className="form-group">
           <label>Item Name</label>
-          <input type="text" className="form-control" placeholder="Enter Name" value={this.state.name} onChange={this.handleNameChange.bind(this)}/>
+          <input type="text" className="form-control" placeholder="Enter Name" value={this.props.data.name !== "New Item"?this.props.data.name:""} onChange={this.handleNameChange.bind(this)}/>
         </div>
         <div className="form-group expire-dates-list">
           <label>Expire Dates</label>
-          {this.state.dates?this.state.dates.map((date, i) => {
+          {this.props.data.dates?this.props.data.dates.map((unix, i) => {
             return (
-              <div className="input-group mb-3">
+              <div className="input-group mb-3" key={"date-" + i}>
                 <div className="input-group-prepend">
                   <button className="btn btn-danger" onClick={(e) => this.removeDate(e, i)}>Delete</button>
                 </div>
-                <input type="date" className="form-control" placeholder="Enter Date" value={date} onChange={(e) => this.handleDateChange(e, i)}/>
+                <input type="date" className="form-control" placeholder="Enter Date" value={unix !== ""? new Date(unix).toISOString().substring(0, 10):""} onChange={(e) => this.handleDateChange(e, i)}/>
               </div>
             );
           }):""}
           <button className="btn btn-outline-primary btn-sm float-right" onClick={this.addDate.bind(this)}>Add Date</button>
         </div>
         <button type="submit" className="btn btn-success float-right save-btn">Save Changes</button>
-        <button type="submit" className="btn btn-danger float-left">Delete Item</button>
+        <button onClick={this.deleteItem.bind(this)} className="btn btn-danger float-left">Delete Item</button>
       </form>
     );
   }
 }
 
 class Pagination extends Component {
+
+  getQuery() {
+    let url = "/dashboard";
+    let search = this.props.search;
+    let query;
+    if (search.indexOf('query') !== -1) {
+      return search.substring(search.indexOf("=") + 1, search.indexOf("&") !== -1? search.indexOf("&"): search.length);
+    } else {
+      return null;
+    }
+  }
+
+  getSkip() {
+    let search = this.props.search;
+    if (search.indexOf("skip") !== -1) {
+      let skip = search.substring(search.indexOf("skip=") + 5, search.length);
+      return parseInt(skip);
+    } else {
+      return 0;
+    }
+  }
+
   render () {
     return (
       <div className="row justify-content-center pagination">
         <nav className="text-center">
           <ul className="pagination">
-            <li className="page-item"><a className="page-link" href="#">Previous</a></li>
-            <li className="page-item"><a className="page-link" href="#">1</a></li>
-            <li className="page-item"><a className="page-link" href="#">2</a></li>
-            <li className="page-item"><a className="page-link" href="#">3</a></li>
-            <li className="page-item"><a className="page-link" href="#">Next</a></li>
+            {this.getSkip() > 0?(
+              <li className="page-item"><span className="page-link" onClick={() =>this.props.searchBy(this.getQuery(), this.getSkip() - 1)}>Previous</span></li>
+            ):""}
+            {this.props.items.length === 10?(
+              <li className="page-item"><span className="page-link" onClick={() => this.props.searchBy(this.getQuery(), this.getSkip() + 1)}>Next</span></li>
+            ):""}
           </ul>
         </nav>
       </div>
     );
   }
 }
+

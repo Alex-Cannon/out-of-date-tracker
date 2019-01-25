@@ -20,7 +20,6 @@ const ROUTES = [{
 }, {
   path: '/dashboard',
   component: require('../../pages/Dashboard/Dashboard.js').default,
-  exact: true,
   auth: true
 }];
 

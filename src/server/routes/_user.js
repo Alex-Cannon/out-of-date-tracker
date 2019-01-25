@@ -32,7 +32,6 @@ router.post('/adduser', (req, res) => {
 });
 
 router.get("/myuser", isAuth, (req, res) => {
-  console.log("got myuser");
   req.user.password = null;
   return res.json(req.user);
 });
