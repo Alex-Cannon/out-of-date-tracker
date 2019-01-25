@@ -1,7 +1,10 @@
-const config = require('../config.js');
-Object.keys(config).map((key) => {
-  process.env[key] = config[key];
-});
+if (!process.env.PRODUCTION) {
+  const config = require('../config.js');
+  Object.keys(config).map((key) => {
+    process.env[key] = config[key];
+  });  
+}
+
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
