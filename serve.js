@@ -1,0 +1,41 @@
+// Production Server file
+const express = require('express');
+const app = express();
+const path = require('path');
+const bodyParser = require('body-parser');
+const mongoUtil = require('./src/server/utils/mongoUtil.js');
+
+const PORT = process.env.PORT || 80;
+
+// Allow JSON and urlencoded
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+
+// Allow static files
+app.use(express.static(path.join(__dirname, 'build')));
+
+// Connect to DB before opening routes
+mongoUtil.connectToServers((err, connection) => {
+  if (err) throw err;
+
+  console.log("DB connections success.");
+  require('./src/js/server/utils/passportUtil.js').setupPassport(app);
+
+  // Setup API routes
+  app.use('/api/', require('./src/server/api/_item.js'));
+  app.use('/api/', require('./src/server/api/_user.js'));
+
+  // Setup VIEW routes (Allow react-router-dom to handle view routing)
+  app.use('*', (req ,res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  });
+
+  // Initialize App
+  app.listen(PORT, (app) =>
+    console.log("App listening on port " + PORT + "...")
+  );
+});
+
+module.exports = app;
+
+
