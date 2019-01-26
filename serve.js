@@ -19,11 +19,11 @@ mongoUtil.connectToServers((err, connection) => {
   if (err) throw err;
 
   console.log("DB connections success.");
-  require('./src/js/server/utils/passportUtil.js').setupPassport(app);
+  require('./src/server/utils/passportUtil.js').setupPassport(app);
 
   // Setup API routes
-  app.use('/api/', require('./src/server/api/_item.js'));
-  app.use('/api/', require('./src/server/api/_user.js'));
+  app.use('/api/', require('./src/server/routes/_item.js'));
+  app.use('/api/', require('./src/server/routes/_user.js'));
 
   // Setup VIEW routes (Allow react-router-dom to handle view routing)
   app.use('*', (req ,res) => {
