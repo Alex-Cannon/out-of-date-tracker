@@ -113,6 +113,13 @@ class SearchForm extends Component {
 class NewItems extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      alert: {
+        className: "",
+        msg: ""
+      }
+    }
   }
 
   saveAll(e) {
@@ -133,9 +140,29 @@ class NewItems extends Component {
 
     axios.post('/api/items', {items: this.props.items})
     .then((res) => {
+      let newAlert = {
+        className: "alert alert-success",
+        msg: "Items saved!"
+      }
+      this.setState({alert: newAlert}, this.removeMessage);
     })
     .catch((err) => {
+      let newAlert = {
+        className: "alert alert-danger",
+        msg: err.response.statusText
+      }
+      this.setState({alert: newAlert}, this.removeMessage);
     });
+  }
+
+  removeMessage() {
+    window.setTimeout(() => {
+      let reset = {
+        className: "",
+        msg: ""
+      };
+      this.setState({alert: reset});
+    }, 4000);
   }
 
   render () {
@@ -146,6 +173,7 @@ class NewItems extends Component {
     return (
       <div className="row">
         <div className="col">
+          <div className={this.state.alert.className + " my-alert"}>{this.state.alert.msg}</div>
           {this.props.items.map((itemData, i) => (
             <Item key={"newitem-" + i} data={itemData} id={"item" + i + itemData._id} index={i} items={this.props.items} set={this.props.set.bind(this)} newItem={true}/>
           ))}
@@ -161,8 +189,14 @@ class Item extends Component {
     super(props);
 
     this.state = {
-      outline: ""
+      outline: "",
+      open: false
     }
+  }
+
+  toggleOpen() {
+    let other = !this.state.open;
+    this.setState({open: other});
   }
 
   getFirstToSpoil() {
@@ -210,17 +244,15 @@ class Item extends Component {
     const data = this.props.data || {name: "Undefined"};
     return (
       <div className={data.class?"card " + data.class + this.state.outline:"card" + this.state.outline}>
-        <a className="card-header" data-toggle="collapse" href={"#"+this.props.id} role="button" aria-expanded="false" aria-controls="multiCollapseExample1">
+        <a className="card-header" data-toggle="collapse" href={"#"+this.props.id} role="button" onClick={this.toggleOpen.bind(this)}>
           {data.name || "No Name"}
           <i className="text-bold float-right">OOD {this.getFirstToSpoil()}
           </i>
         </a>
         <div className="row">
           <div className="col">
-            <div className="collapse multi-collapse" id={this.props.id}>
-              <div className="card-content">
-                <ItemEditForm data={this.props.data} index={this.props.index} items={this.props.items} set={this.props.set.bind(this)} newItem={this.props.newItem}/>
-              </div>
+            <div className={this.state.open?"card-content item":"card-content item close-item"}>
+              <ItemEditForm data={this.props.data} index={this.props.index} items={this.props.items} set={this.props.set.bind(this)} newItem={this.props.newItem}/>
             </div>
           </div>
         </div>
@@ -232,6 +264,13 @@ class Item extends Component {
 class ItemEditForm extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      alert: {
+        className: "",
+        msg: ""
+      }
+    }
   }
 
   addDate(e) {
@@ -274,10 +313,19 @@ class ItemEditForm extends Component {
     // POST item
     axios.put('/api/item', item)
     .then((res) => {
+      let newAlert = {
+        className: "alert alert-success",
+        msg: "Item saved"
+      };
+      this.setState({alert: newAlert}, this.removeMessage);
       this.setItem('_id', res.data._id);
     })
     .catch((err) => {
-      alert("Failed to save item");
+      let newAlert = {
+        className: "alert alert-danger",
+        msg: err.response.statusText
+      };
+      this.setState({alert: newAlert});
     });
   }
 
@@ -300,9 +348,23 @@ class ItemEditForm extends Component {
       items.splice(this.props.index, 1);
       this.props.set({items});
     })
-    .catch(() => {
-      alert("Error deleting item");
+    .catch((err) => {
+      let newAlert = {
+        className: "alert alert-danger",
+        msg: err.response.statusText
+      };
+      this.setState({alert: newAlert}, this.removeMessage);
     })
+  }
+
+  removeMessage() {
+    window.setTimeout(() => {
+      let reset = {
+        className: "",
+        msg: ""
+      };
+      this.setState({alert: reset});
+    }, 4000);
   }
 
   handleNameChange(e) {
@@ -319,28 +381,31 @@ class ItemEditForm extends Component {
 
   render () {
     return (
-      <form method="POST" onSubmit={this.submitItem.bind(this)}>
-        <div className="form-group">
-          <label>Item Name</label>
-          <input type="text" className="form-control" placeholder="Enter Name" value={this.props.data.name !== "New Item"?this.props.data.name:""} onChange={this.handleNameChange.bind(this)}/>
-        </div>
-        <div className="form-group expire-dates-list">
-          <label>Expire Dates</label>
-          {this.props.data.dates?this.props.data.dates.map((unix, i) => {
-            return (
-              <div className="input-group mb-3" key={"date-" + i}>
-                <div className="input-group-prepend">
-                  <button className="btn btn-danger" onClick={(e) => this.removeDate(e, i)}>Delete</button>
+      <>
+        <div className={this.state.alert.className + " my-alert"}>{this.state.alert.msg}</div>
+        <form method="POST" onSubmit={this.submitItem.bind(this)}>
+          <div className="form-group">
+            <label>Item Name</label>
+            <input type="text" className="form-control" placeholder="Enter Name" value={this.props.data.name !== "New Item"?this.props.data.name:""} onChange={this.handleNameChange.bind(this)}/>
+          </div>
+          <div className="form-group expire-dates-list">
+            <label>Expire Dates</label>
+            {this.props.data.dates?this.props.data.dates.map((unix, i) => {
+              return (
+                <div className="input-group mb-3" key={"date-" + i}>
+                  <div className="input-group-prepend">
+                    <button className="btn btn-danger" onClick={(e) => this.removeDate(e, i)}>Delete</button>
+                  </div>
+                  <input type="date" className="form-control" placeholder="Enter Date" value={unix !== ""? new Date(unix).toISOString().substring(0, 10):""} onChange={(e) => this.handleDateChange(e, i)}/>
                 </div>
-                <input type="date" className="form-control" placeholder="Enter Date" value={unix !== ""? new Date(unix).toISOString().substring(0, 10):""} onChange={(e) => this.handleDateChange(e, i)}/>
-              </div>
-            );
-          }):""}
-          <button className="btn btn-outline-primary btn-sm float-right" onClick={this.addDate.bind(this)}>Add Date</button>
-        </div>
-        <button type="submit" className="btn btn-success float-right save-btn">Save Changes</button>
-        <button onClick={this.deleteItem.bind(this)} className="btn btn-danger float-left">Delete Item</button>
-      </form>
+              );
+            }):""}
+            <button className="btn btn-outline-primary btn-sm float-right" onClick={this.addDate.bind(this)}>Add Date</button>
+          </div>
+          <button type="submit" className="btn btn-success float-right save-btn">Save Changes</button>
+          <button onClick={this.deleteItem.bind(this)} className="btn btn-danger float-left">Delete Item</button>
+        </form>
+      </>
     );
   }
 }

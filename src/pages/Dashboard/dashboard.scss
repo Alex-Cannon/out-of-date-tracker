@@ -32,3 +32,15 @@
   float: center;
   margin-top: 1rem;
 }
+
+.item {
+  display: block;
+}
+
+.close-item {
+  display: none;
+}
+
+.my-alert {
+  transition: 0.5s ease-out;
+}
