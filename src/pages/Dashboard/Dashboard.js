@@ -188,15 +188,23 @@ class Item extends Component {
   constructor(props) {
     super(props);
 
+    let items = this.props.items;
+    let item = this.props.data;
+    item.open = false;
+    items[this.props.index] = item; 
+    this.props.set({items});
+
     this.state = {
-      outline: "",
-      open: false
+      outline: ""
     }
   }
 
   toggleOpen() {
-    let other = !this.state.open;
-    this.setState({open: other});
+    let items = this.props.items;
+    let item = this.props.data;
+    item.open = !item.open;
+    items[this.props.index] = item; 
+    this.props.set({items});
   }
 
   getFirstToSpoil() {
@@ -244,14 +252,14 @@ class Item extends Component {
     const data = this.props.data || {name: "Undefined"};
     return (
       <div className={data.class?"card " + data.class + this.state.outline:"card" + this.state.outline}>
-        <a className="card-header" data-toggle="collapse" href={"#"+this.props.id} role="button" onClick={this.toggleOpen.bind(this)}>
+        <a className="card-header" href={"#"+this.props.id} role="button" onClick={this.toggleOpen.bind(this)}>
           {data.name || "No Name"}
           <i className="text-bold float-right">OOD {this.getFirstToSpoil()}
           </i>
         </a>
         <div className="row">
           <div className="col">
-            <div className={this.state.open?"card-content item":"card-content item close-item"}>
+            <div className={this.props.data.open?"card-content item":"card-content item close-item"}>
               <ItemEditForm data={this.props.data} index={this.props.index} items={this.props.items} set={this.props.set.bind(this)} newItem={this.props.newItem}/>
             </div>
           </div>
