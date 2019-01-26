@@ -14,9 +14,6 @@ function createItem(req, res) {
   });
 }
 
-// Post an item
-router.post('/item', isAuth, createItem);
-
 // Post items
 router.post('/items', isAuth, (req, res) => {
   Item.create(req.body.items, (err, item) => {
